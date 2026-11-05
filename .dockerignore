@@ -1,0 +1,12 @@
+.git
+.gitmodules
+node_modules
+javascript
+ncc-cache
+docker-images
+*.s9pk
+# Only the Rust workspace and the license from the application's repo go into the image.
+upstream-project/*
+!upstream-project/host
+!upstream-project/LICENSE
+upstream-project/host/target
