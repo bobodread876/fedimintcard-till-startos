@@ -115,8 +115,10 @@ Nothing is generated at install.
    and code. The operator approves it in the provisioner app (Settings, Tills, Add a till).
 4. The running till polls the claim every 3 s. On approval it writes `till-ops.json`, deletes
    the claim, reports its federation's name and mint keys to the registry, and is on ops, with
-   no restart. A claim lives 10 minutes; the till polls only while it runs, which is why Connect
-   to registry waits for Join federation.
+   no restart. The operator has 10 minutes to approve a claim; once approved, the registry keeps
+   it for 7 days, so a till that was stopped or restarting at the approval collects its token
+   when it next runs. The till polls only while it runs, which is why Connect to registry waits
+   for Join federation.
 
 ## Actions
 
