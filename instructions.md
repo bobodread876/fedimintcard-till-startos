@@ -42,6 +42,16 @@ neither.
 The POS app does all the talking. A phone that is not paired, or that was unpaired, gets
 "unauthorized" from every request.
 
+### Offline payments
+
+Cards set up with Fedimint Card Setup from this version on (applet 3.0) can pay when the till
+cannot reach the internet. The POS shows **Paid offline**; the till keeps the signed payment and
+sends it to the registry and the federation once it is online again, on its own, within about
+30 seconds. Let the till run online for a minute after installing, so it can fetch what it
+needs to check cards offline. Older cards keep working online only.
+
+Online taps also prepare spare slots on each card, so it has room for change when offline.
+
 ### Actions
 
 - **Pair a POS** — shows the pairing code again, for a new phone or one that was reset. Every
@@ -61,3 +71,7 @@ tunnel too, or the guardians and the registry see your home IP.
 ## Limitations
 
 The money from sales stays in the till's wallet. There is no action yet to move it out.
+
+A payment taken offline is the merchant's risk until the till sends it: a card copied by an
+attacker could spend the same money elsewhere first. Genuine cards cannot: each note on the card
+signs one payment, ever.

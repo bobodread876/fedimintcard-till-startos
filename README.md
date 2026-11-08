@@ -58,7 +58,7 @@ from it.
 
 | Volume | Mount point | Contents |
 | --- | --- | --- |
-| `main` | `/data` | The till's data directory: `mnemonic` (the wallet's root secret), `client.db` (the federation client's RocksDB), `invite`, `card_state.json`, `cards/` (per-card state on ops), `sales.json`, `cashouts.log`, `till-pos-token`, `till-claim.json` (a claim waiting for approval), `till-ops.json` (the till token and its registry's URL) |
+| `main` | `/data` | The till's data directory: `mnemonic` (the wallet's root secret), `client.db` (the federation client's RocksDB), `invite`, `card_state.json`, `cards/` (per-card state on ops), `sales.json`, `cashouts.log`, `till-pos-token`, `till-claim.json` (a claim waiting for approval), `till-ops.json` (the till token, its registry's URL and the registry's certificate key for checking cards offline), `offline_queue.json` (payments taken offline and not yet sent), `block-header.json` (the newest Bitcoin block header, for the cards' clocks) |
 | `startos` | not mounted | `store.json` (the registry URL) |
 
 `invite` is written by `join` only after the federation accepted the wallet; the package treats
@@ -188,6 +188,11 @@ backup. A restore brings back the wallet (mnemonic and client database), the car
 holds locally, the sales ledger, the POS token (paired phones keep working) and the registry
 settings (the till token is in `main`, so a restored till stays connected).
 
+`offline_queue.json` is in `main`, so a backup taken while payments wait to be sent keeps them;
+restoring an older backup loses the payments taken offline after it (the cards have already
+spent those notes). Back up after the queue is empty when you can (`/v1/status`
+`offline.queued: 0`).
+
 The card state that matters lives in the registry, not on the box: a restored till reloads each
 card from ops on its next tap. Restoring an old backup of the wallet loses the eCash the till
 collected after that backup (the mnemonic can recover notes only through the federation's own
@@ -203,6 +208,10 @@ recovery, which this package does not drive).
    `till serve` owns the data directory.
 4. A till joins one federation for good; changing federations means a new install.
 5. x86_64 only.
+6. Offline payments (upstream `docs/OFFLINE-PROTOCOL.md`) use upstream's defaults: up to 100,000
+   sat and 200 payments unsettled, 12 spare slots kept per card, a fee margin of 100 msat per
+   input and output on federations at core consensus 2.1, block headers from mempool.space. The
+   package does not expose these as settings.
 
 ---
 
