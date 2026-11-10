@@ -13,6 +13,8 @@ approve from the provisioner app you already use.
 
 - A till with its own Fedimint wallet. Every sale is paid into it.
 - One interface, **Till API**, that the POS phones call.
+- Card payments the POS phones take on their own when they cannot reach the till, sent to the
+  till when they reach it again.
 - Actions to join a federation, connect to the registry, and pair phones by QR code.
 
 ## Getting set up
@@ -51,6 +53,13 @@ sends it to the registry and the federation once it is online again, on its own,
 needs to check cards offline. Older cards keep working online only.
 
 Online taps also prepare spare slots on each card, so it has room for change when offline.
+
+**POS phones offline.** A phone with the Fedimint Card POS app from this release on takes the
+card payment itself when it cannot reach the till, shows **Paid offline**, and sends the payment
+to the till as soon as it reaches it again; from then on it is sent on like the till's own. For
+that, open the app on each phone once while it can reach the till: it fetches an offline kit,
+good for a week and renewed on its own, and refuses offline payments without one ("No offline
+kit yet"). A phone's offline payments count toward the till's offline limits.
 
 ### Actions
 

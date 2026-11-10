@@ -58,7 +58,7 @@ from it.
 
 | Volume | Mount point | Contents |
 | --- | --- | --- |
-| `main` | `/data` | The till's data directory: `mnemonic` (the wallet's root secret), `client.db` (the federation client's RocksDB), `invite`, `card_state.json`, `cards/` (per-card state on ops), `sales.json`, `cashouts.log`, `till-pos-token`, `till-claim.json` (a claim waiting for approval), `till-ops.json` (the till token, its registry's URL and the registry's certificate key for checking cards offline), `offline_queue.json` (payments taken offline and not yet sent), `block-header.json` (the newest Bitcoin block header, for the cards' clocks) |
+| `main` | `/data` | The till's data directory: `mnemonic` (the wallet's root secret), `client.db` (the federation client's RocksDB), `invite`, `card_state.json`, `cards/` (per-card state on ops), `sales.json`, `cashouts.log`, `till-pos-token`, `till-claim.json` (a claim waiting for approval), `till-ops.json` (the till token, its registry's URL and the registry's certificate key for checking cards offline), `offline_queue.json` (payments taken offline and not yet sent), `offline_pool.json` (the secrets behind the offline kits handed to POS phones), `block-header.json` (the newest Bitcoin block header, for the cards' clocks) |
 | `startos` | not mounted | `store.json` (the registry URL) |
 
 `invite` is written by `join` only after the federation accepted the wallet; the package treats
@@ -193,6 +193,12 @@ restoring an older backup loses the payments taken offline after it (the cards h
 spent those notes). Back up after the queue is empty when you can (`/v1/status`
 `offline.queued: 0`).
 
+`offline_pool.json` holds the secrets behind the offline kits the till hands to POS phones. A
+restore from a backup taken before a kit was handed out leaves the till not knowing that kit: the
+payments a phone took with it stay on the phone, waiting, until the phone syncs to a till that
+knows them. Back up after the phones have synced when you can (`offline.queued: 0` on
+`/v1/status`, and no payments waiting in the POS app's Settings).
+
 The card state that matters lives in the registry, not on the box: a restored till reloads each
 card from ops on its next tap. Restoring an old backup of the wallet loses the eCash the till
 collected after that backup (the mnemonic can recover notes only through the federation's own
@@ -211,7 +217,10 @@ recovery, which this package does not drive).
 6. Offline payments (upstream `docs/OFFLINE-PROTOCOL.md`) use upstream's defaults: up to 100,000
    sat and 200 payments unsettled, 12 spare slots kept per card, a fee margin of 100 msat per
    input and output on federations at core consensus 2.1, block headers from mempool.space. The
-   package does not expose these as settings.
+   package does not expose these as settings. POS phones offline (upstream `docs/POS-OFFLINE.md`)
+   use the defaults too: an offline kit lasts a week (`--offline-kit-ttl-hours` 168) and the
+   payments taken with it are accepted for 30 days after (`--offline-kit-grace-days`); a phone's
+   offline payments count toward the till's limits above.
 
 ---
 
