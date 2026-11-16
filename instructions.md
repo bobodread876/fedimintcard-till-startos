@@ -15,6 +15,8 @@ approve from the provisioner app you already use.
 - One interface, **Till API**, that the POS phones call.
 - Card payments the POS phones take on their own when they cannot reach the till, sent to the
   till when they reach it again.
+- Card top-ups at the POS: the holder pays a Lightning invoice the phone shows, and the till
+  loads the money onto the card. Your federation needs a Lightning gateway for this.
 - Actions to join a federation, connect to the registry, and pair phones by QR code.
 
 ## Getting set up
@@ -46,20 +48,28 @@ The POS app does all the talking. A phone that is not paired, or that was unpair
 
 ### Offline payments
 
-Cards set up with Fedimint Card Setup from this version on (applet 3.0) can pay when the till
-cannot reach the internet. The POS shows **Paid offline**; the till keeps the signed payment and
+Cards set up with the current Fedimint Card Setup app (applet 3.0) can pay when the till cannot
+reach the internet. The POS shows **Paid offline**; the till keeps the signed payment and
 sends it to the registry and the federation once it is online again, on its own, within about
 30 seconds. Let the till run online for a minute after installing, so it can fetch what it
 needs to check cards offline. Older cards keep working online only.
 
 Online taps also prepare spare slots on each card, so it has room for change when offline.
 
-**POS phones offline.** A phone with the Fedimint Card POS app from this release on takes the
-card payment itself when it cannot reach the till, shows **Paid offline**, and sends the payment
-to the till as soon as it reaches it again; from then on it is sent on like the till's own. For
-that, open the app on each phone once while it can reach the till: it fetches an offline kit,
-good for a week and renewed on its own, and refuses offline payments without one ("No offline
-kit yet"). A phone's offline payments count toward the till's offline limits.
+**POS phones offline.** A phone with the current Fedimint Card POS app takes the card payment
+itself when it cannot reach the till, shows **Paid offline**, and sends the payment to the till
+as soon as it reaches it again; from then on it is sent on like the till's own. For that, open
+the app on each phone once while it can reach the till: it fetches an offline kit, good for a
+week and renewed on its own, and refuses offline payments without one ("No offline kit yet"). A
+phone's offline payments count toward the till's offline limits.
+
+**A lost or wiped phone.** Payments a phone took offline and never sent to the till are lost
+with the phone, and so is the money for those sales, up to the till's offline limits. Before you
+wipe a phone or reinstall the app, open the app while it can reach the till and wait until its
+**Settings** show "0 waiting to sync". The cards the phone charged keep working: at a card's
+next online tap the till sets aside the money those payments used, and the POS shows what the
+card can still pay. 37 days later, once the federation confirms that money was never spent, it
+goes back to the card over its next two online taps.
 
 ### Actions
 
@@ -73,9 +83,11 @@ kit yet"). A phone's offline payments count toward the till's offline limits.
 - **Join federation** — only once. A till stays with the federation it joined; for another
   federation, install another till.
 
-The till also connects to your federation's guardians and to the registry itself. If you publish
-the till through StartTunnel to keep your home IP private, send its outbound traffic through the
-tunnel too, or the guardians and the registry see your home IP.
+The till also connects to your federation's guardians, to the registry, to your federation's
+Lightning gateways when a card is topped up, and to mempool.space for the newest Bitcoin block
+header (the clock for the cards' daily offline limit). If you publish the till through
+StartTunnel to keep your home IP private, send its outbound traffic through the tunnel too, or
+all of them see your home IP.
 
 ## Limitations
 

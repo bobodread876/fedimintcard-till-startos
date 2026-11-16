@@ -58,7 +58,7 @@ from it.
 
 | Volume | Mount point | Contents |
 | --- | --- | --- |
-| `main` | `/data` | The till's data directory: `mnemonic` (the wallet's root secret), `client.db` (the federation client's RocksDB), `invite`, `card_state.json`, `cards/` (per-card state on ops), `sales.json`, `cashouts.log`, `till-pos-token`, `till-claim.json` (a claim waiting for approval), `till-ops.json` (the till token, its registry's URL and the registry's certificate key for checking cards offline), `offline_queue.json` (payments taken offline and not yet sent), `offline_pool.json` (the secrets behind the offline kits handed to POS phones), `block-header.json` (the newest Bitcoin block header, for the cards' clocks) |
+| `main` | `/data` | The till's data directory: `mnemonic` (the wallet's root secret), `client.db` (the federation client's RocksDB), `invite`, `card_state.json`, `cards/` (per-card state on ops), `sales.json`, `cashouts.log`, `topups.json` (Lightning top-ups and their state), `holder_loads.json` (card loads in flight), `till-pos-token`, `till-claim.json` (a claim waiting for approval), `till-ops.json` (the till token, its registry's URL and the registry's certificate key for checking cards offline), `offline_queue.json` (payments taken offline and not yet sent), `offline_pool.json` (the secrets behind the offline kits handed to POS phones), `block-header.json` (the newest Bitcoin block header, for the cards' clocks) |
 | `startos` | not mounted | `store.json` (the registry URL) |
 
 `invite` is written by `join` only after the federation accepted the wallet; the package treats
@@ -85,7 +85,8 @@ Other flags on every start: `--listen 0.0.0.0:9877`, `--require-pos-token`.
 
 ## Dependencies
 
-None. The till reaches its federation's guardians and the registry over the internet itself.
+None. The till reaches its federation's guardians and Lightning gateways, the registry and
+mempool.space over the internet itself.
 
 ## Network Access and Interfaces
 
@@ -191,7 +192,9 @@ settings (the till token is in `main`, so a restored till stays connected).
 `offline_queue.json` is in `main`, so a backup taken while payments wait to be sent keeps them;
 restoring an older backup loses the payments taken offline after it (the cards have already
 spent those notes). Back up after the queue is empty when you can (`/v1/status`
-`offline.queued: 0`).
+`offline.queued: 0`). A card with such a lost payment keeps paying: at its next online tap the
+till holds the slots that payment used as stranded (upstream `docs/TILL-API.md`, "Stranded
+slots").
 
 `offline_pool.json` holds the secrets behind the offline kits the till hands to POS phones. A
 restore from a backup taken before a kit was handed out leaves the till not knowing that kit: the
@@ -221,6 +224,9 @@ recovery, which this package does not drive).
    use the defaults too: an offline kit lasts a week (`--offline-kit-ttl-hours` 168) and the
    payments taken with it are accepted for 30 days after (`--offline-kit-grace-days`); a phone's
    offline payments count toward the till's limits above.
+7. Paying a Lightning invoice with a card (upstream `docs/PAY.md`) is off: the package does not
+   start the till with `--pay-enabled` and has no action that makes a pay token, so
+   `POST /v1/pay` is refused with 503.
 
 ---
 
