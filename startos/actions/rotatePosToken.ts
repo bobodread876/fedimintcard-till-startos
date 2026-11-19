@@ -10,7 +10,7 @@ export const rotatePosToken = sdk.Action.withoutInput(
   async () => ({
     name: i18n('Rotate POS token'),
     description: i18n(
-      'Replace the POS token. Every paired phone stops working until it is paired again.',
+      'Replace the POS token. Every paired POS phone stops working until it is paired again. Paying apps are not affected.',
     ),
     warning: i18n(
       'Every POS phone paired with this till is unpaired. Pair each one again with Pair a POS.',

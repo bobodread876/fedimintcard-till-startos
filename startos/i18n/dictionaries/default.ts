@@ -3,7 +3,7 @@ export const DEFAULT_LANG = 'en_US'
 const dict = {
   // interfaces.ts
   'Till API': 0,
-  'The API the Fedimint Card POS apps call, card link included. Pair a phone with the Pair a POS action; every request needs the POS token.': 1,
+  'The API the Fedimint Card POS apps call, card link included, and, with pay by card on, apps that pay with a card. Pair a POS phone with Pair a POS and a paying app with Pair a paying app; every request needs one of their tokens.': 1,
 
   // main.ts
   Till: 2,
@@ -36,13 +36,13 @@ const dict = {
   'No address yet': 28,
   'This till has no address a phone can reach yet. Add a domain to the Till API interface.': 29,
   'Pair a POS': 30,
-  'Show the pairing QR code to scan in the POS app (Settings, Pair with till). Every phone paired with this till shares one token.': 31,
+  'Show the pairing code for the POS phones that take payments at this till, to scan in the POS app (Settings, Pair with till). Every POS phone shares one token. For an app that pays with a card, use Pair a paying app.': 31,
   "That address is no longer one of this till's addresses. Open the action again.": 32,
-  "In the POS app open Settings, then Pair with till, and scan this code. It carries the till's POS token: show it only to phones you trust. To unpair every phone, run Rotate POS token.": 33,
+  "In the POS app open Settings, then Pair with till, and scan this code. It is for POS phones only. It carries the till's POS token: show it only to phones you trust. To unpair every POS phone, run Rotate POS token.": 33,
 
   // actions/rotatePosToken.ts
   'Rotate POS token': 34,
-  'Replace the POS token. Every paired phone stops working until it is paired again.': 35,
+  'Replace the POS token. Every paired POS phone stops working until it is paired again. Paying apps are not affected.': 35,
   'Every POS phone paired with this till is unpaired. Pair each one again with Pair a POS.': 36,
   'POS token removed': 37,
   'The till makes a new token when it starts. Start the service, then pair each phone again with Pair a POS.': 38,
@@ -71,6 +71,42 @@ const dict = {
   'Waiting for approval in the provisioner app (code ${code})': 56,
   'The request expired before it was approved. Run Connect to registry again.': 57,
   'Not connected to a registry. Run Connect to registry.': 58,
+  // main.ts (the Pay by card check)
+  'Pay by card': 59,
+  'There is no pay token. Turn pay by card off, then on again.': 60,
+  'The till does not take the current pay token. Restart the service.': 61,
+  'On: paired apps can pay with a card': 62,
+  'The till started with pay by card off. Restart the service.': 63,
+  "The till cannot pay Lightning invoices: its federation has no Lightning module the till's wallet can use.": 64,
+
+  // actions/payByCard.ts
+  'Turn off pay by card': 65,
+  'Turn on pay by card': 66,
+  'Let an app that pays with a card, such as the Forge app, ask this till to charge a card and pay a Lightning invoice with what the card paid. Off unless you turn it on.': 67,
+  'Paying apps can no longer pay with a card at this till. They stay paired, so they can still look up a payment and get back one that failed. The till restarts if it is running.': 68,
+  "Anyone you give the paying-app code to can ask this till to charge a card they hold, with that card's PIN, and pay a Lightning invoice from the till's wallet with what the card paid. The till's limits apply: at most 100,000 sats an invoice, 1,000,000 sats a day in all, and a fee reserve of at most 1,000 sats a payment, of which what Lightning does not use stays in the till's wallet. The till restarts if it is running.": 69,
+  'Pay by card is off': 70,
+  'To unpair the paying apps as well, run Rotate pay token.': 71,
+  'Pay by card is on': 72,
+  'Run Pair a paying app to show the code an app scans. The Pay by card check shows whether the till is ready to pay.': 73,
+
+  // actions/pairPayApp.ts
+  'The public https address the paying app will use. A paying app takes no plain http address.': 74,
+  'This till has no public https address yet. Add a public domain to the Till API interface.': 75,
+  'Pair a paying app': 76,
+  'Show the code that an app that pays with a card scans, such as the Forge app. Not for POS phones: they pair with Pair a POS. Every paying app shares one token.': 77,
+  'Turn on pay by card first': 78,
+  'Pay by card is off. Run Turn on pay by card first.': 79,
+  'The running till does not have this pay token yet. Restart the service, then run this action again.': 80,
+  "In the app that pays with a card, scan this code or paste its text: in the Forge app on Android, Tap a Fedimint card. This code is for paying apps only; a POS phone refuses it. It carries the till's pay token: with it, an app can ask the till to charge a card it holds, with that card's PIN. To unpair every paying app, run Rotate pay token.": 81,
+
+  // actions/rotatePayToken.ts
+  'Rotate pay token': 82,
+  'Replace the pay token. Every paired paying app stops working until it is paired again. POS phones are not affected.': 83,
+  'Every paying app paired with this till is unpaired. Pair each one again with Pair a paying app. POS phones stay paired.': 84,
+  'There is no pay token yet': 85,
+  'Pay token replaced': 86,
+  'The till takes the new token when it starts. Start the service, then pair each paying app again with Pair a paying app.': 87,
 } as const
 
 /**

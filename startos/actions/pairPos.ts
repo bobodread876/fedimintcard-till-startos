@@ -1,49 +1,12 @@
-import { T } from '@start9labs/start-sdk'
 import { i18n } from '../i18n'
 import { sdk } from '../sdk'
-import { dataDir, tillCli, tillPort } from '../utils'
+import { dataMount, pairingUrls, tillCli } from '../utils'
 
 const { InputSpec, Value } = sdk
 
-/**
- * Addresses a phone can pair with, best first: the interface's public domains over https (a
- * certificate the phone trusts, such as Let's Encrypt, is the owner's choice when adding the
- * domain), then its LAN addresses over plain http for phones on the same network.
- */
-async function pairingUrls(
-  effects: T.Effects,
-): Promise<Record<string, string>> {
-  const iface = await sdk.host
-    .getOwn(
-      effects,
-      'till',
-      (host) => host?.bindings[tillPort]?.interfaces['till'],
-    )
-    .once()
-  const addresses = iface?.addressInfo
-  if (!addresses) return {}
-  const urls: Record<string, string> = {}
-  for (const u of addresses.nonLocal
-    .filter({ visibility: 'public', kind: 'domain' })
-    .format('url')) {
-    if (u.protocol === 'https:')
-      urls[origin(u)] = i18n('${url} (public domain)', { url: origin(u) })
-  }
-  for (const u of addresses.nonLocal
-    .filter({ visibility: 'private' })
-    .format('url')) {
-    if (u.protocol === 'http:')
-      urls[origin(u)] = i18n('${url} (this network only)', { url: origin(u) })
-  }
-  return urls
-}
-
-// `https://till.example.com` with no trailing slash: what `till pair --url` takes.
-const origin = (u: URL) => `${u.protocol}//${u.host}`
-
 const inputSpec = InputSpec.of({
   url: Value.dynamicSelect(async ({ effects }) => {
-    const urls = await pairingUrls(effects)
+    const urls = await pairingUrls(effects, { lan: true })
     const keys = Object.keys(urls)
     return {
       name: i18n('Till address'),
@@ -66,7 +29,7 @@ export const pairPos = sdk.Action.withInput(
   async () => ({
     name: i18n('Pair a POS'),
     description: i18n(
-      'Show the pairing QR code to scan in the POS app (Settings, Pair with till). Every phone paired with this till shares one token.',
+      'Show the pairing code for the POS phones that take payments at this till, to scan in the POS app (Settings, Pair with till). Every POS phone shares one token. For an app that pays with a card, use Pair a paying app.',
     ),
     warning: null,
     allowedStatuses: 'any',
@@ -76,7 +39,7 @@ export const pairPos = sdk.Action.withInput(
   inputSpec,
   async () => null,
   async ({ effects, input }) => {
-    const urls = await pairingUrls(effects)
+    const urls = await pairingUrls(effects, { lan: true })
     if (!(input.url in urls)) {
       throw new Error(
         i18n(
@@ -89,12 +52,7 @@ export const pairPos = sdk.Action.withInput(
     const out = await sdk.SubContainer.withTemp(
       effects,
       { imageId: 'till' },
-      sdk.Mounts.of().mountVolume({
-        volumeId: 'main',
-        subpath: null,
-        mountpoint: dataDir,
-        readonly: false,
-      }),
+      dataMount(),
       'pair-pos',
       (sub) =>
         sub.execFail(tillCli('till', 'pair', '--text', '--url', input.url)),
@@ -104,7 +62,7 @@ export const pairPos = sdk.Action.withInput(
       version: '1',
       title: i18n('Pair a POS'),
       message: i18n(
-        "In the POS app open Settings, then Pair with till, and scan this code. It carries the till's POS token: show it only to phones you trust. To unpair every phone, run Rotate POS token.",
+        "In the POS app open Settings, then Pair with till, and scan this code. It is for POS phones only. It carries the till's POS token: show it only to phones you trust. To unpair every POS phone, run Rotate POS token.",
       ),
       result: {
         type: 'single',

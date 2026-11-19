@@ -2,9 +2,10 @@ import { i18n } from './i18n'
 import { sdk } from './sdk'
 import { tillPort } from './utils'
 
-// One HTTP API on the till's port: the POS apps' REST calls and the card-link WebSocket
-// (`GET /v1/card/link`). StartOS serves it plain and, with addSsl (the http default), behind TLS
-// it terminates; every /v1 request needs the POS token either way.
+// One HTTP API on the till's port: the POS apps' REST calls, a paying app's pay routes (with pay
+// by card on), and the card-link WebSocket (`GET /v1/card/link`). StartOS serves it plain and,
+// with addSsl (the http default), behind TLS it terminates; every /v1 request needs the POS token
+// or the pay token either way.
 export const setInterfaces = sdk.setupInterfaces(async ({ effects }) => {
   const tillMulti = sdk.MultiHost.of(effects, 'till')
   const tillOrigin = await tillMulti.bindPort(tillPort, {
@@ -16,7 +17,7 @@ export const setInterfaces = sdk.setupInterfaces(async ({ effects }) => {
     name: i18n('Till API'),
     id: 'till',
     description: i18n(
-      'The API the Fedimint Card POS apps call, card link included. Pair a phone with the Pair a POS action; every request needs the POS token.',
+      'The API the Fedimint Card POS apps call, card link included, and, with pay by card on, apps that pay with a card. Pair a POS phone with Pair a POS and a paying app with Pair a paying app; every request needs one of their tokens.',
     ),
     type: 'api',
     masked: false,

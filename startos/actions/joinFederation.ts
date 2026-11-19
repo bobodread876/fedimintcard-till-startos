@@ -1,7 +1,7 @@
 import { inviteCode } from '../fileModels/tillFiles'
 import { i18n } from '../i18n'
 import { sdk } from '../sdk'
-import { dataDir, tillCli } from '../utils'
+import { dataMount, tillCli } from '../utils'
 
 const { InputSpec, Value } = sdk
 
@@ -51,12 +51,7 @@ export const joinFederation = sdk.Action.withInput(
     const out = await sdk.SubContainer.withTemp(
       effects,
       { imageId: 'till' },
-      sdk.Mounts.of().mountVolume({
-        volumeId: 'main',
-        subpath: null,
-        mountpoint: dataDir,
-        readonly: false,
-      }),
+      dataMount(),
       'join-federation',
       (sub) => sub.exec(tillCli('join', invite), { timeout: 300_000 }),
     )

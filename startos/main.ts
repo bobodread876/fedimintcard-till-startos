@@ -1,8 +1,14 @@
 import { storeJson } from './fileModels/store.json'
-import { posToken } from './fileModels/tillFiles'
+import { payToken, posToken } from './fileModels/tillFiles'
 import { i18n } from './i18n'
 import { sdk } from './sdk'
-import { dataDir, defaultRegistryUrl, tillCli, tillPort } from './utils'
+import {
+  dataDir,
+  defaultRegistryUrl,
+  tillCall,
+  tillCli,
+  tillPort,
+} from './utils'
 
 /** What `GET /v1/status` answers (fedimintcard docs/TILL-API.md), the parts the checks read. */
 type TillStatus = {
@@ -37,8 +43,13 @@ export const main = sdk.setupMain(async ({ effects }) => {
   // claim it leaves (and the claim carries its own registry URL).
   const opsUrl =
     (await storeJson.read((s) => s.opsUrl).once()) ?? defaultRegistryUrl
+  // Turn on / Turn off pay by card: the till reads `--pay-enabled` only at start, so a change
+  // restarts it.
+  const payEnabled = !!(await storeJson
+    .read((s) => s.payEnabled)
+    .const(effects))
 
-  return sdk.Daemons.of(effects)
+  const daemons = sdk.Daemons.of(effects)
     .addDaemon('till', {
       subcontainer: sdk.SubContainer.of(
         effects,
@@ -66,6 +77,8 @@ export const main = sdk.setupMain(async ({ effects }) => {
           // directory (till-ops.json); without one it waits for a claim and refuses card jobs.
           '--ops-url',
           opsUrl,
+          // Paying an invoice with a card (`POST /v1/pay`), at the till's default limits.
+          ...(payEnabled ? ['--pay-enabled'] : []),
         ),
       },
       ready: {
@@ -147,4 +160,81 @@ export const main = sdk.setupMain(async ({ effects }) => {
       },
       requires: ['till'],
     })
+
+  if (!payEnabled) return daemons
+
+  return daemons.addHealthCheck('pay', {
+    ready: {
+      display: i18n('Pay by card'),
+      fn: async () => {
+        const pay = (await payToken.read().once())?.trim()
+        if (!pay) {
+          return {
+            result: 'failure',
+            message: i18n(
+              'There is no pay token. Turn pay by card off, then on again.',
+            ),
+          }
+        }
+        // The pay token as a paying app sends it: refused if the till started before it existed.
+        const health = await tillCall('/v1/health', pay)
+        if (health === 'down') {
+          return {
+            result: 'failure',
+            message: i18n('The till is not answering'),
+          }
+        }
+        if (health.status === 401) {
+          return {
+            result: 'failure',
+            message: i18n(
+              'The till does not take the current pay token. Restart the service.',
+            ),
+          }
+        }
+        // `POST /v1/pay {}` with the POS token is refused before anything runs: 400 bad_request
+        // once paying is on, 503 with why while it cannot pay (TILL-API.md).
+        const pos = (await posToken.read().once())?.trim()
+        const probe = pos
+          ? await tillCall('/v1/pay', pos, { method: 'POST', body: '{}' })
+          : 'down'
+        if (probe === 'down') {
+          return {
+            result: 'failure',
+            message: i18n('The till is not answering'),
+          }
+        }
+        const error = (probe.body as { error?: string } | null)?.error
+        if (probe.status === 400 && error === 'bad_request') {
+          return {
+            result: 'success',
+            message: i18n('On: paired apps can pay with a card'),
+          }
+        }
+        if (error === 'pay_disabled') {
+          return {
+            result: 'failure',
+            message: i18n(
+              'The till started with pay by card off. Restart the service.',
+            ),
+          }
+        }
+        if (error === 'lightning_unavailable') {
+          return {
+            result: 'failure',
+            message: i18n(
+              "The till cannot pay Lightning invoices: its federation has no Lightning module the till's wallet can use.",
+            ),
+          }
+        }
+        return {
+          result: 'failure',
+          message: i18n('The till answered HTTP ${status}', {
+            status: probe.status,
+          }),
+        }
+      },
+    },
+    requires: ['till'],
+  })
 })

@@ -2,7 +2,12 @@ import { storeJson } from '../fileModels/store.json'
 import { inviteCode, tillOps } from '../fileModels/tillFiles'
 import { i18n } from '../i18n'
 import { sdk } from '../sdk'
-import { dataDir, defaultRegistryUrl, defaultTillName, tillCli } from '../utils'
+import {
+  dataMount,
+  defaultRegistryUrl,
+  defaultTillName,
+  tillCli,
+} from '../utils'
 
 const { InputSpec, Value } = sdk
 
@@ -72,12 +77,7 @@ export const connectRegistry = sdk.Action.withInput(
     const out = await sdk.SubContainer.withTemp(
       effects,
       { imageId: 'till' },
-      sdk.Mounts.of().mountVolume({
-        volumeId: 'main',
-        subpath: null,
-        mountpoint: dataDir,
-        readonly: false,
-      }),
+      dataMount(),
       'connect-registry',
       (sub) =>
         sub.exec(

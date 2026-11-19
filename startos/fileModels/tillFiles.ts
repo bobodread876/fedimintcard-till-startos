@@ -1,6 +1,6 @@
 import { FileHelper, z } from '@start9labs/start-sdk'
 import { sdk } from '../sdk'
-import { inviteFile, posTokenFile, tillOpsFile } from '../utils'
+import { inviteFile, payTokenFile, posTokenFile, tillOpsFile } from '../utils'
 
 // Files the till itself writes in its data directory. The package only reads them.
 
@@ -24,4 +24,11 @@ export const tillOps = FileHelper.json(
 export const posToken = FileHelper.string({
   base: sdk.volumes.main,
   subpath: posTokenFile,
+})
+
+// The pay token (`till pair --scope pay`): a paying app sends it as a bearer, and so does the Pay
+// by card check. `till serve` reads it only at start, and never makes it.
+export const payToken = FileHelper.string({
+  base: sdk.volumes.main,
+  subpath: payTokenFile,
 })
