@@ -1,9 +1,10 @@
+import { tillImage } from './tillImage'
 import { setupManifest } from '@start9labs/start-sdk'
 import { long, short } from './i18n'
 
 export const manifest = setupManifest({
   id: 'fedimintcard-till',
-  title: 'Fedimint Card Till',
+  title: 'Fedimint Card 4.0 Till',
   license: 'MIT',
   packageRepo: 'https://github.com/bobodread876/fedimintcard-till-startos',
   upstreamRepo: 'https://github.com/fedimintcard/fedimintcard',
@@ -15,11 +16,8 @@ export const manifest = setupManifest({
   volumes: ['main', 'startos'],
   images: {
     till: {
-      // Built by ./Dockerfile from the upstream-project submodule; see UPDATING.md.
-      source: { dockerBuild: { dockerfile: 'Dockerfile', workdir: '.' } },
-      // The Dockerfile cross-compiles for x86_64 only (the owner's server); an aarch64 build
-      // would need its own cross toolchain and has never been tried.
-      arch: ['x86_64'],
+      source: tillImage,
+      arch: ['x86_64', 'aarch64'],
       emulateMissing: false,
     },
   },

@@ -3,6 +3,12 @@ import { LangDict } from './default'
 // The POS apps are in English, so their labels (Settings, Pair with till) stay in English here.
 export default {
   es_ES: {
+    88: 'Administración de caja',
+    89: 'Configura la caja, revisa las ventas y administra los retiros.',
+    90: 'Mostrar contraseña de administración',
+    91: 'Copia la contraseña de administración de la caja.',
+    92: 'Abre Administración de caja e introduce esta contraseña.',
+    93: 'Abre Administración de caja para unirte a una federación.',
     0: 'API de la caja',
     1: 'La API que usan las apps POS de Fedimint Card, incluido el enlace de tarjeta, y, con el pago con tarjeta activado, las apps que pagan con una tarjeta. Empareja un teléfono POS con Emparejar un POS y una app de pago con Emparejar una app de pago; cada solicitud necesita uno de sus tokens.',
     2: 'Caja',
@@ -87,6 +93,12 @@ export default {
     87: 'La caja toma el nuevo token al arrancar. Inicia el servicio y vuelve a emparejar cada app de pago con Emparejar una app de pago.',
   },
   de_DE: {
+    88: 'Kassenverwaltung',
+    89: 'Kasse einrichten, Verkäufe prüfen und Auszahlungen verwalten.',
+    90: 'Admin-Passwort anzeigen',
+    91: 'Das Passwort für die Kassenverwaltung kopieren.',
+    92: 'Die Kassenverwaltung öffnen und dieses Passwort eingeben.',
+    93: 'Die Kassenverwaltung öffnen, um einer Föderation beizutreten.',
     0: 'Kassen-API',
     1: 'Die API, die die Fedimint-Card-POS-Apps aufrufen, einschließlich Kartenverbindung, und bei eingeschalteter Kartenzahlung Apps, die mit einer Karte zahlen. Koppel ein POS-Telefon mit POS koppeln und eine Zahl-App mit Zahl-App koppeln; jede Anfrage braucht eines ihrer Tokens.',
     2: 'Kasse',
@@ -171,6 +183,12 @@ export default {
     87: 'Die Kasse übernimmt das neue Token beim Start. Starte den Dienst und koppel dann jede Zahl-App erneut mit Zahl-App koppeln.',
   },
   pl_PL: {
+    88: 'Administracja kasy',
+    89: 'Skonfiguruj kasę, sprawdź sprzedaż i zarządzaj wypłatami.',
+    90: 'Pokaż hasło administratora',
+    91: 'Skopiuj hasło do administracji kasy.',
+    92: 'Otwórz administrację kasy i wpisz to hasło.',
+    93: 'Otwórz administrację kasy, aby dołączyć do federacji.',
     0: 'API kasy',
     1: 'API, z którego korzystają aplikacje POS Fedimint Card, łącznie z łączem karty, a przy włączonej płatności kartą także aplikacje płacące kartą. Sparuj telefon POS akcją Sparuj POS, a aplikację płatniczą akcją Sparuj aplikację płatniczą; każde żądanie wymaga jednego z ich tokenów.',
     2: 'Kasa',
@@ -255,6 +273,12 @@ export default {
     87: 'Kasa przyjmuje nowy token przy uruchomieniu. Uruchom usługę, a potem ponownie sparuj każdą aplikację płatniczą akcją Sparuj aplikację płatniczą.',
   },
   fr_FR: {
+    88: 'Administration de la caisse',
+    89: 'Configurez la caisse, consultez les ventes et gérez les retraits.',
+    90: 'Afficher le mot de passe administrateur',
+    91: 'Copiez le mot de passe de la caisse.',
+    92: 'Ouvrez la page d’administration et saisissez ce mot de passe.',
+    93: 'Ouvrez la page d’administration pour rejoindre une fédération.',
     0: 'API de la caisse',
     1: "L'API qu'appellent les applications POS Fedimint Card, lien de carte compris, et, avec le paiement par carte activé, les applications qui paient avec une carte. Appairez un téléphone POS avec Appairer un POS et une application de paiement avec Appairer une application de paiement ; chaque requête exige l'un de leurs jetons.",
     2: 'Caisse',

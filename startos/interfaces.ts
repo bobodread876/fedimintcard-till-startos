@@ -1,6 +1,6 @@
 import { i18n } from './i18n'
 import { sdk } from './sdk'
-import { tillPort } from './utils'
+import { adminPort, tillPort } from './utils'
 
 // One HTTP API on the till's port: the POS apps' REST calls, a paying app's pay routes (with pay
 // by card on), and the card-link WebSocket (`GET /v1/card/link`). StartOS serves it plain and,
@@ -27,5 +27,21 @@ export const setInterfaces = sdk.setupInterfaces(async ({ effects }) => {
     query: {},
   })
 
-  return [await tillOrigin.export([till])]
+  const adminHost = sdk.MultiHost.of(effects, 'admin')
+  const adminOrigin = await adminHost.bindPort(adminPort, {
+    protocol: 'http',
+    preferredExternalPort: adminPort,
+  })
+  const admin = sdk.createInterface(effects, {
+    id: 'admin',
+    name: i18n('Till admin'),
+    description: i18n('Set up the till, review sales and manage payouts.'),
+    type: 'ui',
+    masked: false,
+    schemeOverride: null,
+    username: null,
+    path: '',
+    query: {},
+  })
+  return [await adminOrigin.export([admin]), await tillOrigin.export([till])]
 })
