@@ -1,6 +1,6 @@
 # Fedimint Card 4.0 Till
 
-This till requires a Card 4.0 registry. It accepts Card 4.0 and compatible later 4.x cards only. Keep a 3.0 till for 3.0 cards or a 3.0 registry.
+This till requires a Card 4.0 registry. It accepts Card 4.0 and compatible later 4.x cards only. Keep a 3.0 till for 3.0 cards or a 3.0 registry. The till supports Bitcoin mint v1 and mint v2. Card operations require a registry that supports the federation’s mint.
 
 Phones running the Fedimint Card POS app connect to this till to charge cards. The till needs a
 wallet in your federation, and it needs to be connected to the fedimintcard registry, which you
@@ -37,6 +37,10 @@ A LAN address works only on a phone that trusts your server's root certificate (
 how to download it), and only while the phone is on the same network. The public domain needs
 neither.
 
+## Updating an existing till
+
+Back up the service in StartOS, then install the updated package over **Fedimint Card 4.0 Till**. Start the service and open **Till admin**. An existing wallet opens with its saved federation, including a wallet whose first join already saved the invite. A new installation asks for a federation invite.
+
 ## Using Fedimint Card Till
 
 ### Till admin
@@ -50,11 +54,11 @@ The POS app does all the talking. A phone that is not paired, or that was unpair
 
 ### Offline payments
 
-Cards set up with the current Fedimint Card Setup app (applet 3.0) can pay when the till cannot
+Certified Card 4.0 cards set up with Fedimint Card Setup can pay when the till cannot
 reach the internet. The POS shows **Paid offline**; the till keeps the signed payment and
 sends it to the registry and the federation once it is online again, on its own, within about
 30 seconds. Let the till run online for a minute after installing, so it can fetch what it
-needs to check cards offline. Older cards keep working online only.
+needs to check cards offline. For offline phone payments on a mint v2 federation, use a Card 4.0 POS app with mint v2 support.
 
 Online taps also prepare spare slots on each card, so it has room for change when offline.
 

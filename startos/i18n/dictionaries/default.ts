@@ -113,6 +113,12 @@ const dict = {
   'Copy the password for Till admin.': 91,
   'Open Till admin and enter this password.': 92,
   'Open Till admin to join a federation': 93,
+  'Joining the federation': 94,
+  'Opening the saved till wallet': 95,
+  'This federation needs a supported Bitcoin mint. Open Till admin for details.': 96,
+  'Till admin refused the saved admin password': 97,
+  'Waiting for the POS API token': 98,
+  'Waiting for the federation to confirm support for this wallet. The till will retry.': 99,
 } as const
 
 /**

@@ -3,6 +3,12 @@ import { LangDict } from './default'
 // The POS apps are in English, so their labels (Settings, Pair with till) stay in English here.
 export default {
   es_ES: {
+    99: 'Esperando a que la federación confirme que admite esta billetera. La caja volverá a intentarlo.',
+    94: 'Uniéndose a la federación',
+    95: 'Abriendo la billetera guardada de la caja',
+    96: 'Esta federación necesita una casa de moneda de Bitcoin compatible. Abre Administración de caja para ver los detalles.',
+    97: 'Administración de caja rechazó la contraseña guardada',
+    98: 'Esperando el token de la API de POS',
     88: 'Administración de caja',
     89: 'Configura la caja, revisa las ventas y administra los retiros.',
     90: 'Mostrar contraseña de administración',
@@ -93,6 +99,12 @@ export default {
     87: 'La caja toma el nuevo token al arrancar. Inicia el servicio y vuelve a emparejar cada app de pago con Emparejar una app de pago.',
   },
   de_DE: {
+    99: 'Die Kasse wartet auf die Bestätigung der Föderation, dass diese Wallet unterstützt wird, und versucht es erneut.',
+    94: 'Beitritt zur Föderation läuft',
+    95: 'Die gespeicherte Wallet der Kasse wird geöffnet',
+    96: 'Diese Föderation benötigt eine unterstützte Bitcoin-Mint. Einzelheiten stehen in der Kassenverwaltung.',
+    97: 'Die Kassenverwaltung hat das gespeicherte Passwort abgelehnt',
+    98: 'Warten auf das Token für die POS-API',
     88: 'Kassenverwaltung',
     89: 'Kasse einrichten, Verkäufe prüfen und Auszahlungen verwalten.',
     90: 'Admin-Passwort anzeigen',
@@ -183,6 +195,12 @@ export default {
     87: 'Die Kasse übernimmt das neue Token beim Start. Starte den Dienst und koppel dann jede Zahl-App erneut mit Zahl-App koppeln.',
   },
   pl_PL: {
+    99: 'Oczekiwanie na potwierdzenie przez federację obsługi tego portfela. Kasa ponowi próbę.',
+    94: 'Trwa dołączanie do federacji',
+    95: 'Otwieranie zapisanego portfela kasy',
+    96: 'Ta federacja wymaga obsługiwanej mennicy Bitcoin. Szczegóły znajdziesz w panelu administracyjnym kasy.',
+    97: 'Panel administracyjny kasy odrzucił zapisane hasło',
+    98: 'Oczekiwanie na token API POS',
     88: 'Administracja kasy',
     89: 'Skonfiguruj kasę, sprawdź sprzedaż i zarządzaj wypłatami.',
     90: 'Pokaż hasło administratora',
@@ -273,6 +291,12 @@ export default {
     87: 'Kasa przyjmuje nowy token przy uruchomieniu. Uruchom usługę, a potem ponownie sparuj każdą aplikację płatniczą akcją Sparuj aplikację płatniczą.',
   },
   fr_FR: {
+    99: 'En attente de la confirmation que la fédération prend en charge ce portefeuille. La caisse réessaiera.',
+    94: 'Connexion à la fédération en cours',
+    95: 'Ouverture du portefeuille enregistré de la caisse',
+    96: 'Cette fédération nécessite un module Bitcoin mint pris en charge. Consultez l’administration de la caisse.',
+    97: 'L’administration de la caisse a refusé le mot de passe enregistré',
+    98: 'En attente du jeton de l’API du terminal de paiement',
     88: 'Administration de la caisse',
     89: 'Configurez la caisse, consultez les ventes et gérez les retraits.',
     90: 'Afficher le mot de passe administrateur',

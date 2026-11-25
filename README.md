@@ -4,7 +4,7 @@
 
 # Fedimint Card 4.0 Till on StartOS
 
-This till requires a Card 4.0 registry. It accepts Card 4.0 and compatible later 4.x cards only. Keep a 3.0 till for 3.0 cards or a 3.0 registry.
+This till requires a Card 4.0 registry. It accepts Card 4.0 and compatible later 4.x cards only. Keep a 3.0 till for 3.0 cards or a 3.0 registry. The till supports Bitcoin mint v1 and mint v2. Card operations require a registry that supports the federation’s mint.
 
 > Everything not listed in this document should behave the same as upstream
 > Fedimint Card Till. If a feature, setting, or behavior is not mentioned here,
@@ -59,8 +59,8 @@ from it.
 | `main` | `/data` | The till's data directory: `mnemonic` (the wallet's root secret), `client.db` (the federation client's RocksDB), `invite`, `card_state.json`, `cards/` (per-card state on ops), `sales.json`, `cashouts.log`, `topups.json` (Lightning top-ups and their state), `holder_loads.json` (card loads in flight), `till-pos-token`, `till-pay-token` (the pay-scope token, once pay by card was turned on), `pays.json` (payments made with a card for a paying app, and their refunds), `till-claim.json` (a claim waiting for approval), `till-ops.json` (the till token, its registry's URL and the registry's certificate key for checking cards offline), `offline_queue.json` (payments taken offline and not yet sent), `offline_pool.json` (the secrets behind the offline kits handed to POS phones), `block-header.json` (the newest Bitcoin block header, for the cards' clocks) |
 | `startos` | not mounted | `store.json` (the registry URL) |
 
-`invite` is written by `join` only after the federation accepted the wallet; the package treats
-its presence as "joined".
+The saved `invite` identifies the federation recorded during setup. Till admin shows whether
+the wallet is opening, and the Till health check reports when the POS API is ready.
 
 ## File Models
 

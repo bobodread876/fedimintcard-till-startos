@@ -1,6 +1,6 @@
 # Updating the till image
 
-Release images are published under `ghcr.io/fedimintcard/till` when the owner tags the upstream repository. Read the release version and index digest from the completed `Release till image` workflow.
+The upstream image workflow publishes `ghcr.io/fedimintcard/till` under an immutable commit tag for a reviewed main build or a version tag for an owner-tagged release. Read the image tag, source commit and index digest from the completed upstream workflow.
 
 1. Run `python3 scripts/pin-image.py IMAGE_TAG sha256:RELEASE_INDEX_DIGEST --revision FULL_COMMIT_SHA`. Use the owner’s X.Y.Z image tag or the immutable sha-FULL_COMMIT_SHA tag. This verifies the registry index and both architectures’ embedded source revisions and writes the digest-pinned image reference in `startos/manifest/tillImage.ts`.
 2. Set the package version and release notes in `startos/versions/current.ts`. Check the root license against the upstream tag.
