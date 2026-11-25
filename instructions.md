@@ -1,4 +1,6 @@
-# Fedimint Card Till
+# Fedimint Card 4.0 Till
+
+This till requires a Card 4.0 registry. It accepts Card 4.0 and compatible later 4.x cards only. Keep a 3.0 till for 3.0 cards or a 3.0 registry.
 
 Phones running the Fedimint Card POS app connect to this till to charge cards. The till needs a
 wallet in your federation, and it needs to be connected to the fedimintcard registry, which you
@@ -13,7 +15,7 @@ approve from the provisioner app you already use.
 ## What you get on StartOS
 
 - A till with its own Fedimint wallet. Every sale is paid into it.
-- One interface, **Till API**, that the POS phones call.
+- **Till admin** for browser setup, sales and payouts, and **Till API** for paired phones.
 - Card payments the POS phones take on their own when they cannot reach the till, sent to the
   till when they reach it again.
 - Card top-ups at the POS: the holder pays a Lightning invoice the phone shows, and the till
@@ -25,25 +27,21 @@ approve from the provisioner app you already use.
 
 ## Getting set up
 
-1. **Run Join federation.** Paste your federation's invite code (`fed11…`). A guardian's
-   **Connect a Client** screen shows it. Then start the service.
-2. **Run Connect to registry.** Give the till a name you will recognise, and leave the registry
-   URL as it is unless you run your own registry. The result shows a QR code and a short code.
-3. **Approve it in the provisioner app.** Open **Settings**, then **Tills**, then **Add a till**,
-   scan the QR code (or type the code), check the name, and tap **Approve**. Do this within 10
-   minutes, with the service running. Within a few seconds the **Registry** check shows
-   **Connected** and your federation's name.
-4. **Give the till a public address.** On the **Till API** interface, add a public domain on your
-   StartTunnel gateway (for example `till.example.com`) and choose **Let's Encrypt**, so phones
-   trust its certificate. Point the domain's DNS at the StartTunnel server as StartOS asks.
-5. **Pair each POS phone.** Run **Pair a POS**, choose the public domain, and in the POS app
-   open **Settings**, then **Pair with till**, and scan the code.
+1. Start the service. In StartOS Actions open **Show admin password** and copy the password. Open **Till admin** over HTTPS and sign in.
+2. Join your federation using the invite code from a guardian. Connect the till to the registry and enter a name you recognise.
+3. In the provisioner app, open **Settings**, **Tills**, then **Add a till**. Scan the registry QR code, check the name and approve the claim within ten minutes.
+4. In StartOS give **Till API** an address the phone trusts. For remote phones, use an HTTPS domain on your StartTunnel gateway.
+5. In **Till admin**, open phone pairing. The till uses its published **Till API** address for the QR code. On the POS phone, open **Settings** and **Pair with till** and scan it.
 
 A LAN address works only on a phone that trusts your server's root certificate (StartOS shows
 how to download it), and only while the phone is on the same network. The public domain needs
 neither.
 
 ## Using Fedimint Card Till
+
+### Till admin
+
+Review sales and your balance. To receive proceeds over Lightning, choose and confirm a destination and payout settings. For a manual eCash withdrawal, open a receiving wallet in the same federation and claim the exported notes. Keep a current service backup.
 
 ### Till API
 
@@ -127,8 +125,6 @@ StartTunnel to keep your home IP private, send its outbound traffic through the 
 all of them see your home IP.
 
 ## Limitations
-
-The money from sales stays in the till's wallet. There is no action yet to move it out.
 
 A payment taken offline is the merchant's risk until the till sends it: a card copied by an
 attacker could spend the same money elsewhere first. Genuine cards cannot: each note on the card

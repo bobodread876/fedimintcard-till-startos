@@ -1,27 +1,17 @@
-# Updating the upstream version
+# Updating the till image
 
-## Determining the upstream version
+Release images are published under `ghcr.io/fedimintcard/till` when the owner tags the upstream repository. Read the release version and index digest from the completed `Release till image` workflow.
 
-The application is the fedimintcard repository, pinned as the `upstream-project` git submodule;
-the image builds `card-sidecar` from its `host/` workspace (`Dockerfile`). Upstream has no
-releases or tags, so the pin is a commit on `main`:
+1. Run `python3 scripts/pin-image.py IMAGE_TAG sha256:RELEASE_INDEX_DIGEST --revision FULL_COMMIT_SHA`. Use the owner’s X.Y.Z image tag or the immutable sha-FULL_COMMIT_SHA tag. This verifies the registry index and both architectures’ embedded source revisions and writes the digest-pinned image reference in `startos/manifest/tillImage.ts`.
+2. Set the package version and release notes in `startos/versions/current.ts`. Check the root license against the upstream tag.
+3. Build x86 and arm packages. Install on a disposable StartOS instance, verify browser setup on a clean wallet, and test an upgrade from the previous package against a disposable existing wallet. Check sign-in, sales, pairing, payout recovery and backup restore before release.
 
-```bash
-git -C upstream-project fetch origin
-git -C upstream-project log --oneline HEAD..origin/main -- host
+For an unpublished build, use the OCI source in `startos/manifest/tillImage.ts` and create the archive from the upstream repository:
+
+```sh
+docker buildx build --platform linux/amd64,linux/arm64 --output type=oci,dest=/path/to/package/till.oci.tar .
 ```
 
-The upstream version is `version` under `[workspace.package]` in
-`upstream-project/host/Cargo.toml`.
+The archive stays local. Before publishing, replace the test source using the release pin script.
 
-Two base images are pinned by digest in the `Dockerfile`: the Rust builder (its release must match
-`upstream-project/host/rust-toolchain.toml`) and `debian:bookworm-slim` for the runtime. Read a
-tag's current digest with `docker buildx imagetools inspect <image>:<tag>`.
-
-## Applying the bump
-
-1. `git -C upstream-project checkout <commit>` and stage the submodule (`git add upstream-project`).
-2. If `rust-toolchain.toml` moved, change the builder to `rust:<that release>-bookworm` and its
-   digest. Keep the runtime on the same Debian release as the builder (the binary links against
-   the builder's glibc).
-3. Set `version` in `startos/versions/current.ts` to the upstream version from step 1.
+The pull request workflow builds each architecture with a temporary key on an isolated runner. The release workflow uses the repository's configured maintainer signing secret (`DEV_KEY`). An authorized maintainer tags the package separately from the upstream till tag. A GitHub release with the signed packages is sufficient for sideloading. Set a release registry only when publishing there is intended.

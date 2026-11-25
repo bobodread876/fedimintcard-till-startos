@@ -5,6 +5,7 @@ import { sdk } from './sdk'
 // The till's port inside the container: `till serve --listen 0.0.0.0:9877`, bound by the 'till'
 // interface and health-checked in main.ts.
 export const tillPort = 9877
+export const adminPort = 9878
 
 // The wallet's data directory inside every subcontainer: the `main` volume.
 export const dataDir = '/data'
@@ -46,41 +47,54 @@ export const dataMount = () =>
 // `https://till.example.com` with no trailing slash: what `till pair --url` takes.
 const origin = (u: URL) => `${u.protocol}//${u.host}`
 
-/**
- * Addresses a pairing can carry, best first: the Till API interface's public domains over https
- * (a certificate the phone trusts, such as Let's Encrypt, is the owner's choice when adding the
- * domain), then, with `lan`, its LAN addresses over plain http for phones on the same network.
- * The pay code takes no LAN address: the Forge app refuses plain http to another computer, since
- * the PIN and the token would cross the network in clear.
- */
-export async function pairingUrls(
+/** Read only routes StartOS advertises for the POS service. Use a trusted public
+ * HTTPS domain first, then the advertised LAN routes when the phone is on-site. */
+function readPairingUrls<R>(
   effects: T.Effects,
-  { lan }: { lan: boolean },
-): Promise<Record<string, string>> {
-  const iface = await sdk.host
-    .getOwn(
-      effects,
-      'till',
-      (host) => host?.bindings[tillPort]?.interfaces['till'],
-    )
-    .once()
-  const addresses = iface?.addressInfo
-  if (!addresses) return {}
-  const urls: Record<string, string> = {}
-  for (const u of addresses.nonLocal
-    .filter({ visibility: 'public', kind: 'domain' })
-    .format('url')) {
-    if (u.protocol === 'https:')
-      urls[origin(u)] = i18n('${url} (public domain)', { url: origin(u) })
-  }
-  if (!lan) return urls
-  for (const u of addresses.nonLocal
-    .filter({ visibility: 'private' })
-    .format('url')) {
-    if (u.protocol === 'http:')
-      urls[origin(u)] = i18n('${url} (this network only)', { url: origin(u) })
-  }
-  return urls
+  lan: boolean,
+  select: (urls: Record<string, string>) => R,
+) {
+  return sdk.host.getOwn(effects, 'till', (host) => {
+    const urls: Record<string, string> = {}
+    const binding = host?.bindings[tillPort]
+    const addresses = binding?.enabled
+      ? binding.interfaces['till']?.addressInfo
+      : undefined
+    if (addresses) {
+      for (const u of addresses.nonLocal
+        .filter({ visibility: 'public', kind: 'domain' })
+        .format('url')) {
+        if (u.protocol === 'https:')
+          urls[origin(u)] = i18n('${url} (public domain)', { url: origin(u) })
+      }
+      if (lan) {
+        const local = addresses.nonLocal
+          .filter({ visibility: 'private' })
+          .format('url')
+        for (const scheme of ['http:', 'https:']) {
+          for (const u of local) {
+            if (u.protocol === scheme)
+              urls[origin(u)] = i18n('${url} (this network only)', {
+                url: origin(u),
+              })
+          }
+        }
+      }
+    }
+    return select(urls)
+  })
+}
+
+export function pairingUrls(effects: T.Effects, { lan }: { lan: boolean }) {
+  return readPairingUrls(effects, lan, (urls) => urls).once()
+}
+
+export function preferredPosOrigin(effects: T.Effects) {
+  return readPairingUrls(
+    effects,
+    true,
+    (urls) => Object.keys(urls)[0] ?? null,
+  ).const()
 }
 
 /** What the till answers `path` with `token` as the bearer (GET unless told): status and JSON body, or 'down'. */

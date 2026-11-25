@@ -107,6 +107,12 @@ const dict = {
   'There is no pay token yet': 85,
   'Pay token replaced': 86,
   'The till takes the new token when it starts. Start the service, then pair each paying app again with Pair a paying app.': 87,
+  'Till admin': 88,
+  'Set up the till, review sales and manage payouts.': 89,
+  'Show admin password': 90,
+  'Copy the password for Till admin.': 91,
+  'Open Till admin and enter this password.': 92,
+  'Open Till admin to join a federation': 93,
 } as const
 
 /**

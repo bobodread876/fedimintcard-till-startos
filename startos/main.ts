@@ -1,10 +1,12 @@
 import { storeJson } from './fileModels/store.json'
-import { payToken, posToken } from './fileModels/tillFiles'
+import { inviteCode, payToken, posToken } from './fileModels/tillFiles'
 import { i18n } from './i18n'
 import { sdk } from './sdk'
 import {
-  dataDir,
+  adminPort,
+  dataMount,
   defaultRegistryUrl,
+  preferredPosOrigin,
   tillCall,
   tillCli,
   tillPort,
@@ -49,17 +51,14 @@ export const main = sdk.setupMain(async ({ effects }) => {
     .read((s) => s.payEnabled)
     .const(effects))
 
+  const posOrigin = await preferredPosOrigin(effects)
+
   const daemons = sdk.Daemons.of(effects)
     .addDaemon('till', {
       subcontainer: sdk.SubContainer.of(
         effects,
         { imageId: 'till' },
-        sdk.Mounts.of().mountVolume({
-          volumeId: 'main',
-          subpath: null,
-          mountpoint: dataDir,
-          readonly: false,
-        }),
+        dataMount(),
         'till',
       ),
       exec: {
@@ -67,7 +66,12 @@ export const main = sdk.setupMain(async ({ effects }) => {
         // reads them the same on every runtime.
         command: tillCli(
           'till',
-          'serve',
+          'admin',
+          ...(posOrigin ? ['--pos-public-url', posOrigin] : []),
+          '--admin-listen',
+          `0.0.0.0:${adminPort}`,
+          '--admin-password-file',
+          '/data/admin-password',
           '--listen',
           `0.0.0.0:${tillPort}`,
           // Every request reaches the till from StartOS's proxy, so none may skip the POS token
@@ -87,6 +91,25 @@ export const main = sdk.setupMain(async ({ effects }) => {
         // listens; both go over the network.
         gracePeriod: 60_000,
         fn: async () => {
+          // Browser setup is available before a merchant joins a federation.
+          if (!(await inviteCode.read().once())) {
+            try {
+              const res = await fetch(`http://127.0.0.1:${adminPort}/healthz`, {
+                signal: AbortSignal.timeout(5_000),
+              })
+              if (res.ok)
+                return {
+                  result: 'success',
+                  message: i18n('Open Till admin to join a federation'),
+                }
+            } catch {
+              // Normal during startup.
+            }
+            return {
+              result: 'starting',
+              message: i18n('Waiting for the till to start'),
+            }
+          }
           const r = await tillStatus()
           if (r.ok) {
             return {
@@ -117,6 +140,12 @@ export const main = sdk.setupMain(async ({ effects }) => {
       ready: {
         display: i18n('Registry'),
         fn: async () => {
+          if (!(await inviteCode.read().once())) {
+            return {
+              result: 'loading',
+              message: i18n('Open Till admin to join a federation'),
+            }
+          }
           const r = await tillStatus()
           if (!r.ok) {
             return {

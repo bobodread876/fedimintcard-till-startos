@@ -2,18 +2,20 @@
   <img src="icon.svg" alt="Fedimint Card Till Logo" width="21%">
 </p>
 
-# Fedimint Card Till on StartOS
+# Fedimint Card 4.0 Till on StartOS
+
+This till requires a Card 4.0 registry. It accepts Card 4.0 and compatible later 4.x cards only. Keep a 3.0 till for 3.0 cards or a 3.0 registry.
 
 > Everything not listed in this document should behave the same as upstream
 > Fedimint Card Till. If a feature, setting, or behavior is not mentioned here,
 > the upstream documentation is accurate and fully applicable; see the
 > Documentation section of `instructions.md` for links.
 
-The till service of [fedimintcard](https://github.com/fedimintcard/fedimintcard) (`card-sidecar till serve`):
+The till service of [fedimintcard](https://github.com/fedimintcard/fedimintcard) (`card-sidecar till admin`):
 it holds a merchant wallet in a Fedimint federation, charges Fedimint eCash cards that a paired
 POS phone taps, and keeps each card's state in the fedimintcard registry ("ops"). This package
 runs it on its own. It connects to the registry by a till claim the operator approves in the
-provisioner app (upstream `docs/TILL-CLAIM.md`), and pairs phones from StartOS actions. Paying a
+provisioner app (upstream `docs/TILL-CLAIM.md`), and pairs phones from Till admin or the StartOS actions. Paying a
 Lightning invoice with a card for another app (upstream `docs/PAY.md`) is off until the owner
 turns it on.
 
@@ -38,16 +40,9 @@ turns it on.
 
 ## Image and Container Runtime
 
-One image, built by this repo's `Dockerfile` from the `upstream-project` submodule (the
-fedimintcard repository): `card-sidecar` compiled from its `host/` Rust workspace, on Debian slim
-with CA certificates. Upstream publishes no image.
+The till image runs the admin page on port 9878 and the phone API on port 9877. The package supports x86_64 and aarch64. Release packages pin the upstream GHCR index. A local OCI archive supplies the same image while testing an unreleased build. See UPDATING.md.
 
-| | |
-| --- | --- |
-| Image source | Custom Dockerfile, cross-compiled from the submodule's source |
-| Architectures | x86_64 |
-| Entrypoint | None used; the daemon runs `card-sidecar --data-dir /data till serve` |
-| Subcontainers | `till` (the daemon); actions run short-lived `join-federation`, `connect-registry`, `pair-pos`, `pay-by-card`, `pair-pay-app` and `rotate-pay-token` subcontainers |
+On upgrade, StartOS transfers root-owned wallet files to UID 1000 before starting the till. This preserves wallet contents and permissions. The daemon and its actions then use the same volume.
 
 The daemon runs with `--require-pos-token`: every `/v1` request needs the POS token as a
 bearer, including requests that arrive from a local address, because every request reaches the
@@ -69,7 +64,9 @@ its presence as "joined".
 
 ## File Models
 
-The package keeps one file of its own and reads three of the till's.
+StartOS keeps its registry settings and admin password and reads the till's setup files.
+
+- **`admin-password`** (main volume, mode 0600) holds the per-install credential used by the Till admin interface.
 
 - **`store.json`** (JSON, `startos` volume): `opsUrl`, the registry the last **Connect to
   registry** asked. `main.ts` reads it once per start and passes it as `--ops-url` (default
@@ -101,11 +98,15 @@ mempool.space over the internet itself.
 
 ## Network Access and Interfaces
 
-One interface on one port. Its plain address serves HTTP; its TLS address is StartOS's TLS
-wrapper in front of the same port.
+The admin page builds the POS pairing code from the **Till API** interface. It prefers a public HTTPS domain, then a LAN route. A change of preferred origin restarts the daemon with the newly advertised address.
+
+The **Till admin** UI has its own host and port 9878. The per-install admin password is stored on the main volume and displayed through the masked StartOS action.
+
+StartOS terminates TLS for both interfaces. Open the HTTPS address for Till admin.
 
 | Interface | Type | Port | Protocol | Purpose |
 | --- | --- | --- | --- | --- |
+| `admin` (Till admin) | `ui` | 9878 | HTTP behind StartOS TLS | Merchant sign-in, setup, sales, payout settings and withdrawals |
 | `till` (Till API) | `api` | 9877 | HTTP, WebSocket upgrade on `/v1/card/link` | The POS apps' REST calls, a paying app's pay routes, and the card link that carries a tapped card's APDUs |
 
 Phones away from the merchant's network need a public domain on this interface with a
@@ -123,26 +124,13 @@ only the interface's public https domains: the Forge app refuses plain http to a
 
 ## Installation and First-Run Flow
 
-Nothing is generated at install.
-
-1. **Join federation** (critical task: the service stays stopped until it has run) makes the
-   wallet (`mnemonic`) and joins it with the invite code.
-2. The service starts. With no till token the till listens anyway, on ops but not connected:
-   `/v1/status` says so and charges, balances and issues answer `ops_not_connected`. It makes
-   the POS token if there is none.
-3. **Connect to registry** (important task, enabled once joined) runs `till claim`: the registry
-   answers a claim, and the action shows its QR text (`fedimintcard-till-claim:<registry>?c=<code>`)
-   and code. The operator approves it in the provisioner app (Settings, Tills, Add a till).
-4. The running till polls the claim every 3 s. On approval it writes `till-ops.json`, deletes
-   the claim, reports its federation's name and mint keys to the registry, and is on ops, with
-   no restart. The operator has 10 minutes to approve a claim; once approved, the registry keeps
-   it for 7 days, so a till that was stopped or restarting at the approval collects its token
-   when it next runs. The till polls only while it runs, which is why Connect to registry waits
-   for Join federation.
+Start the service and copy its generated password using **Show admin password**. Open the **Till admin** interface and complete setup in the browser. The original actions also remain available. An operator who uses **Join federation** as an action must stop the service first. The browser joins an unconfigured till while the process is running.
 
 ## Actions
 
-Seven user-facing actions; none is hidden.
+The Actions tab includes the following controls.
+
+- **Show admin password** displays the per-install password as a masked value.
 
 - **Join federation**: once, at setup. Writes `mnemonic`, `client.db` and `invite` in `main`.
   Takes a few seconds (it downloads the federation's config from a guardian). Refuses when
@@ -182,23 +170,13 @@ Seven user-facing actions; none is hidden.
 
 ## Tasks
 
-Two tasks, raised by a watcher that runs on every container start and whenever `invite` or
-`till-ops.json` changes.
-
-| Task | Raised when | Cleared by |
-| --- | --- | --- |
-| Join federation (critical) | `main/invite` is missing or empty | Running **Join federation** successfully |
-| Connect to registry (important) | joined, and `main/till-ops.json` has no `url` | Running **Connect to registry**, or the till writing `till-ops.json` (the watcher clears it) |
-
-Connect to registry is not critical: the till has to be running to pick up its token. Either task
-returns only if its file is removed by hand (or a restore brings back a till that never finished
-setup).
+Once joined, a till without a registry token offers **Connect to registry** as an important task. Browser setup is available before federation join. An upgrade clears the old critical join task.
 
 ## Health Checks
 
 Two checks, and a third while pay by card is on.
 
-- **Till**: `GET /v1/status` on `127.0.0.1:9877` with the POS token as a bearer, every 30 s
+- **Till** checks the admin listener's `/healthz` before setup. After joining, it uses `GET /v1/status` on `127.0.0.1:9877` with the POS token as a bearer, every 30 s
   once healthy. Grace period 60 s: before listening, the till opens its federation client and
   reports to the registry, both over the network. Success shows the federation's name.
   - *The till is not answering* after the grace period: the daemon is exiting; the service log
@@ -252,7 +230,7 @@ knows them. Back up after the phones have synced when you can (`offline.queued: 
 `/v1/status`, and no payments waiting in the POS app's Settings).
 
 The card state that matters lives in the registry, not on the box: a restored till reloads each
-card from ops on its next tap. Restoring an old backup of the wallet loses the eCash the till
+card from ops on its next tap. Finish pending payouts and record the last sale and payout before a backup. Keep the original till stopped during restore. A stale restore can resume automatic payouts against outdated records. Reconcile later activity before starting the restored till. Restoring an old backup of the wallet loses the eCash the till
 collected after that backup (the mnemonic can recover notes only through the federation's own
 recovery, which this package does not drive).
 
@@ -265,7 +243,7 @@ recovery, which this package does not drive).
    eCash (`ecash export`), importing eCash, `info`. Upstream says not to run them while
    `till serve` owns the data directory.
 4. A till joins one federation for good; changing federations means a new install.
-5. x86_64 only.
+5. Each architecture requires its corresponding image in the release index.
 6. Offline payments (upstream `docs/OFFLINE-PROTOCOL.md`) use upstream's defaults: up to 100,000
    sat and 200 payments unsettled, 12 spare slots kept per card, a fee margin of 100 msat per
    input and output on federations at core consensus 2.1, block headers from mempool.space. The
@@ -287,19 +265,22 @@ recovery, which this package does not drive).
 
 ```yaml
 package_id: fedimintcard-till
-image: built from Dockerfile (upstream-project submodule)
-architectures: [x86_64]
+image: upstream till release index (local OCI archive for testing)
+architectures: [x86_64, aarch64]
 subcontainers: [till]
 volumes:
   main: /data
   startos: (not mounted)
 file_models:
+  - main/admin-password
   - startos/store.json
   - main/invite (read only)
   - main/till-pos-token (read only)
   - main/till-pay-token (read; made and replaced through till pair --scope pay)
   - main/till-ops.json (read only, url only)
 startos_managed_flags:
+  - --admin-listen
+  - --admin-password-file
   - --ops-url
   - --listen
   - --require-pos-token
@@ -307,7 +288,9 @@ startos_managed_flags:
 dependencies: none
 interfaces:
   till: { type: api, port: 9877 }
+  admin: { type: ui, port: 9878 }
 actions:
+  - show-admin-password
   - join-federation
   - connect-registry
   - pair-pos
@@ -316,7 +299,6 @@ actions:
   - pair-pay-app
   - rotate-pay-token
 tasks:
-  - { action: join-federation, severity: critical }
   - { action: connect-registry, severity: important }
 health_checks:
   - till

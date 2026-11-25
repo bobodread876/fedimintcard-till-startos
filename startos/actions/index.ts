@@ -1,3 +1,4 @@
+import { showAdminPassword } from './showAdminPassword'
 import { sdk } from '../sdk'
 import { connectRegistry } from './connectRegistry'
 import { joinFederation } from './joinFederation'
@@ -8,6 +9,7 @@ import { rotatePayToken } from './rotatePayToken'
 import { rotatePosToken } from './rotatePosToken'
 
 export const actions = sdk.Actions.of()
+  .addAction(showAdminPassword)
   .addAction(joinFederation)
   .addAction(connectRegistry)
   .addAction(pairPos)
