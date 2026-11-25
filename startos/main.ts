@@ -1,3 +1,5 @@
+import { adminPassword } from './fileModels/adminPassword'
+import { adminPhase } from './health'
 import { storeJson } from './fileModels/store.json'
 import { inviteCode, payToken, posToken } from './fileModels/tillFiles'
 import { i18n } from './i18n'
@@ -91,25 +93,6 @@ export const main = sdk.setupMain(async ({ effects }) => {
         // listens; both go over the network.
         gracePeriod: 60_000,
         fn: async () => {
-          // Browser setup is available before a merchant joins a federation.
-          if (!(await inviteCode.read().once())) {
-            try {
-              const res = await fetch(`http://127.0.0.1:${adminPort}/healthz`, {
-                signal: AbortSignal.timeout(5_000),
-              })
-              if (res.ok)
-                return {
-                  result: 'success',
-                  message: i18n('Open Till admin to join a federation'),
-                }
-            } catch {
-              // Normal during startup.
-            }
-            return {
-              result: 'starting',
-              message: i18n('Waiting for the till to start'),
-            }
-          }
           const r = await tillStatus()
           if (r.ok) {
             return {
@@ -119,11 +102,62 @@ export const main = sdk.setupMain(async ({ effects }) => {
               }),
             }
           }
-          if (r.why === 'no-token') {
-            return {
-              result: 'starting',
-              message: i18n('Waiting for the till to start'),
-            }
+          const phase = await adminPhase(
+            adminPort,
+            await adminPassword.read().once(),
+          )
+          switch (phase) {
+            case 'setup':
+              return {
+                result: 'success',
+                message: i18n('Open Till admin to join a federation'),
+              }
+            case 'joining':
+              return {
+                result: 'starting',
+                message: i18n('Joining the federation'),
+              }
+            case 'opening':
+              return {
+                result: 'starting',
+                message: i18n('Opening the saved till wallet'),
+              }
+            case 'retrying':
+              return {
+                result: 'starting',
+                message: i18n(
+                  'Waiting for the federation to confirm support for this wallet. The till will retry.',
+                ),
+              }
+            case 'unsupported':
+              return {
+                result: 'failure',
+                message: i18n(
+                  'This federation needs a supported Bitcoin mint. Open Till admin for details.',
+                ),
+              }
+            case 'auth':
+              return {
+                result: 'failure',
+                message: i18n('Till admin refused the saved admin password'),
+              }
+            case 'unavailable':
+              return {
+                result: 'failure',
+                message: i18n('The till is not answering'),
+              }
+            case 'no-password':
+              return {
+                result: 'starting',
+                message: i18n('Waiting for the till to start'),
+              }
+            case 'ready':
+              if (r.why === 'no-token') {
+                return {
+                  result: 'starting',
+                  message: i18n('Waiting for the POS API token'),
+                }
+              }
           }
           return {
             result: 'failure',
