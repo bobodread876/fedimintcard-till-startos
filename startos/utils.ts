@@ -47,6 +47,29 @@ export const dataMount = () =>
 // `https://till.example.com` with no trailing slash: what `till pair --url` takes.
 const origin = (u: URL) => `${u.protocol}//${u.host}`
 
+function privateAddressRank(host: T.HostnameInfo, published: T.BindInfo['addresses']): number {
+  const meta = host.metadata
+  if (meta.kind === 'mdns') return 0
+  if (meta.kind === 'private-domain') return 1
+  if (meta.kind === 'ipv4' || meta.kind === 'ipv6') {
+    // StartOS associates a LAN name with an IP by gateway and mapped port.
+    // Gateway IDs are opaque, and an IP's range does not identify a LAN.
+    const hasLocalName = published.available.some(
+      (name) =>
+        !name.public &&
+        name.port === host.port &&
+        (name.metadata.kind === 'mdns' || name.metadata.kind === 'private-domain') &&
+        name.metadata.gateways.includes(meta.gateway),
+    )
+    if (hasLocalName) return 2
+    const enabledByUser = published.lanEnabled.some(
+      ([hostname, port]) => hostname === host.hostname && port === (host.port ?? 0),
+    )
+    if (enabledByUser) return 3
+  }
+  return 4
+}
+
 /** Read only routes StartOS advertises for the POS service. Use a trusted public
  * HTTPS domain first, then the advertised LAN routes when the phone is on-site. */
 function readPairingUrls<R>(
@@ -57,10 +80,8 @@ function readPairingUrls<R>(
   return sdk.host.getOwn(effects, 'till', (host) => {
     const urls: Record<string, string> = {}
     const binding = host?.bindings[tillPort]
-    const addresses = binding?.enabled
-      ? binding.interfaces['till']?.addressInfo
-      : undefined
-    if (addresses) {
+    const addresses = binding?.interfaces['till']?.addressInfo
+    if (binding?.enabled && addresses) {
       for (const u of addresses.nonLocal
         .filter({ visibility: 'public', kind: 'domain' })
         .format('url')) {
@@ -68,15 +89,18 @@ function readPairingUrls<R>(
           urls[origin(u)] = i18n('${url} (public domain)', { url: origin(u) })
       }
       if (lan) {
-        const local = addresses.nonLocal
-          .filter({ visibility: 'private' })
-          .format('url')
-        for (const scheme of ['http:', 'https:']) {
-          for (const u of local) {
-            if (u.protocol === scheme)
-              urls[origin(u)] = i18n('${url} (this network only)', {
-                url: origin(u),
-              })
+        const local = addresses.nonLocal.filter({ visibility: 'private' })
+        const routes = local.hostnames.map((host) => ({
+          url: new URL(local.toUrl(host)),
+          rank: privateAddressRank(host, binding.addresses),
+        }))
+        routes.sort((a, b) =>
+          a.rank - b.rank ||
+          Number(b.url.protocol === 'https:') - Number(a.url.protocol === 'https:'),
+        )
+        for (const { url } of routes) {
+          if (url.protocol === 'https:' || url.protocol === 'http:') {
+            urls[origin(url)] = i18n('${url} (this network only)', { url: origin(url) })
           }
         }
       }

@@ -31,10 +31,10 @@ approve from the provisioner app you already use.
 2. Join your federation using the invite code from a guardian. Connect the till to the registry and enter a name you recognise.
 3. In the provisioner app, open **Settings**, **Tills**, then **Add a till**. Scan the registry QR code, check the name and approve the claim within ten minutes.
 4. In StartOS give **Till API** an address the phone trusts. For remote phones, use an HTTPS domain on your StartTunnel gateway.
-5. In **Till admin**, open phone pairing. The till uses its published **Till API** address for the QR code. On the POS phone, open **Settings** and **Pair with till** and scan it.
+5. In **Till admin**, open phone pairing. The QR code uses the **Till API** public HTTPS domain when available. On the LAN it prefers the published local network name. To pair over a VPN, use **Actions → Pair a POS** and choose its address. On the POS phone, open **Settings** and **Pair with till** and scan it.
 
-A LAN address works only on a phone that trusts your server's root certificate (StartOS shows
-how to download it), and only while the phone is on the same network. The public domain needs
+A local HTTPS address requires the phone to trust your server's root certificate (StartOS shows
+how to download it) and to be on the same network. The public domain needs
 neither.
 
 ## Updating an existing till
@@ -133,3 +133,7 @@ all of them see your home IP.
 A payment taken offline is the merchant's risk until the till sends it: a card copied by an
 attacker could spend the same money elsewhere first. Genuine cards cannot: each note on the card
 signs one payment, ever.
+
+## Card top-ups
+
+Use the updated Fedimint Card POS. When a customer chooses a top-up, POS shows the amount going onto the card, a fixed fee and the total for one Lightning payment. After payment, tap the card to load the quoted amount. The till can start with an empty wallet. Older paid top-ups keep the terms of their original invoice.
