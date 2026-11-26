@@ -6,6 +6,8 @@
 
 This till requires a Card 4.0 registry. It accepts Card 4.0 and compatible later 4.x cards only. Keep a 3.0 till for 3.0 cards or a 3.0 registry. The till supports Bitcoin mint v1 and mint v2. Card operations require a registry that supports the federation’s mint.
 
+[Download the Card 4.0 StartOS packages and Android POS APK](https://github.com/fedimintcard/fedimintcard/releases/tag/till-v0.1.0). The [merchant setup guide](instructions.md#getting-set-up) covers registry selection, pairing and how to confirm the phone is ready for offline sales.
+
 > Everything not listed in this document should behave the same as upstream
 > Fedimint Card Till. If a feature, setting, or behavior is not mentioned here,
 > the upstream documentation is accurate and fully applicable; see the
@@ -124,7 +126,7 @@ only the interface's public https domains: the Forge app refuses plain http to a
 
 ## Installation and First-Run Flow
 
-Start the service and copy its generated password using **Show admin password**. Open the **Till admin** interface and complete setup in the browser. The original actions also remain available. An operator who uses **Join federation** as an action must stop the service first. The browser joins an unconfigured till while the process is running.
+Choose the signed `.s9pk` for the server’s processor from the [Card 4.0 release](https://github.com/fedimintcard/fedimintcard/releases/tag/till-v0.1.0). For an upgrade, back up the existing service and sideload the package over it. Start the service and copy its generated password using **Show admin password**. Open the **Till admin** interface and complete setup in the browser. The original actions also remain available. An operator who uses **Join federation** as an action must stop the service first. The browser joins an unconfigured till while the process is running.
 
 ## Actions
 
@@ -179,8 +181,8 @@ Two checks, and a third while pay by card is on.
 - **Till** checks the admin listener's `/healthz` before setup. After joining, it uses `GET /v1/status` on `127.0.0.1:9877` with the POS token as a bearer, every 30 s
   once healthy. Grace period 60 s: before listening, the till opens its federation client and
   reports to the registry, both over the network. Success shows the federation's name.
-  - *The till is not answering* after the grace period: the daemon is exiting; the service log
-    says why (a wallet that will not open, the port taken).
+  - *Open Till admin to join a federation* means the service is ready for first setup. *Joining the federation* and *Opening the saved till wallet* report progress. If the federation has yet to confirm wallet support, leave the till running while it retries.
+  - If the check says the federation needs a supported Bitcoin mint, open **Till admin** for the wallet details. If it says *The till is not answering*, open the service logs to identify the cause.
   - *The till answered HTTP 401*: `till-pos-token` changed after the till started (a rotation
     while it ran by hand); restart the service.
 - **Registry**: the same `/v1/status`, its `ops_state`, once the till is ready.

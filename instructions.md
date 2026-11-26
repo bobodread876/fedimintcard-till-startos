@@ -6,6 +6,12 @@ Phones running the Fedimint Card POS app connect to this till to charge cards. T
 wallet in your federation, and it needs to be connected to the fedimintcard registry, which you
 approve from the provisioner app you already use.
 
+## Download and install
+
+The [Card 4.0 release](https://github.com/fedimintcard/fedimintcard/releases/tag/till-v0.1.0) includes StartOS package `0.1.0:12` for [Intel or AMD (x86_64)](https://github.com/fedimintcard/fedimintcard/releases/download/till-v0.1.0/fedimintcard-till-0.1.0-12-x86_64.s9pk) and [ARM64 (aarch64)](https://github.com/fedimintcard/fedimintcard/releases/download/till-v0.1.0/fedimintcard-till-0.1.0-12-aarch64.s9pk). Choose the package for your server and check the download against [SHA256SUMS](https://github.com/fedimintcard/fedimintcard/releases/download/till-v0.1.0/SHA256SUMS) before sideloading it in StartOS.
+
+For an Android POS phone, the release includes the [signed POS 1.1.0 build 8 APK](https://github.com/fedimintcard/fedimintcard/releases/download/till-v0.1.0/FedimintCard-POS-1.1.0-8.apk) and its [SHA-256 checksum](https://github.com/fedimintcard/fedimintcard/releases/download/till-v0.1.0/FedimintCard-POS-1.1.0-8.apk.sha256). Keep using the same install channel for future updates. Before changing channels or reinstalling the app, connect the phone to the till and confirm **0 waiting to sync** in POS Settings.
+
 ## Documentation
 
 - [Till API](https://github.com/fedimintcard/fedimintcard/blob/main/docs/TILL-API.md) - what the till does on each request, and its error codes.
@@ -28,10 +34,10 @@ approve from the provisioner app you already use.
 ## Getting set up
 
 1. Start the service. In StartOS Actions open **Show admin password** and copy the password. Open **Till admin** over HTTPS and sign in.
-2. Join your federation using the invite code from a guardian. Connect the till to the registry and enter a name you recognise.
-3. In the provisioner app, open **Settings**, **Tills**, then **Add a till**. Scan the registry QR code, check the name and approve the claim within ten minutes.
+2. Join the same federation you chose for the cards in Fedimint Card Setup. Paste the guardian’s invite in **Till admin** and wait for the **Till** health check to show your federation’s name.
+3. In the Card 4.0 Setup app, check **Settings → Registry** for **Test** or **Live**. Ask your registry operator to confirm Card 4.0 support for your federation’s mint before using Live. In StartOS, open **Actions → Connect to registry**, enter a till name and set **Registry URL** to the address for that same selection. Copy the address beside `test` or `production` (Live) in the [Setup app’s address list](https://github.com/fedimintcard/fedimintcard/blob/till-v0.1.0/apps/provisioner/src/api.ts#L1069-L1073). In Setup, open **Settings → Tills → Add a till**, scan the registry QR code and approve the claim within ten minutes. Wait for the **Registry** check to show **Connected**.
 4. In StartOS give **Till API** an address the phone trusts. For remote phones, use an HTTPS domain on your StartTunnel gateway.
-5. In **Till admin**, open phone pairing. The QR code uses the **Till API** public HTTPS domain when available. On the LAN it prefers the published local network name. To pair over a VPN, use **Actions → Pair a POS** and choose its address. On the POS phone, open **Settings** and **Pair with till** and scan it.
+5. In **Till admin**, open phone pairing. The QR code uses the **Till API** public HTTPS domain when available. On the LAN it prefers the published local network name. To pair over a VPN, use **Actions → Pair a POS** and choose its address. On the POS phone, open **Settings** and **Pair with till** and scan it. While the phone is online, check that POS Settings shows the Till API address and a freshly fetched offline kit.
 
 A local HTTPS address requires the phone to trust your server's root certificate (StartOS shows
 how to download it) and to be on the same network. The public domain needs
