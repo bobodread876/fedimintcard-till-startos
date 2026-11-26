@@ -148,7 +148,7 @@ The Actions tab includes the following controls.
 - **Pair a POS**: whenever a POS phone needs pairing. Runs `till pair --text --url <address>`:
   makes the POS token if there is none, changes nothing else, and is safe while the till runs.
   Returns the `fedimintcard-till:<url>?t=<token>` text, masked, with a QR code. Offers the
-  interface's public domains over `https`, then its LAN addresses over plain `http`.
+  interface’s public HTTPS domains first, then local network names and IP addresses. When a public domain is absent, a published mDNS name is the default. The action also lists enabled VPN addresses for phones using that VPN.
 - **Rotate POS token**: when a POS phone is lost or its code leaked. Deletes `till-pos-token`;
   the till makes a new one at its next start, and every POS phone has to pair again. The pay
   token is not touched. Instant. Repeating it before a start does nothing more.
